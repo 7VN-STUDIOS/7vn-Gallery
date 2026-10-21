@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Your photos</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><b>7VN STUDIOS</b></header><main><h2 id="h"></h2><p class="err" id="e"></p><div class="tabs" id="t"></div><div class="grid" id="d"></div></main>
+<div id="lb"><img id="li" alt=""></div>
+<script>
+const $=s=>document.querySelector(s),T=location.pathname.split('/')[2];let data;
+fetch('/api/g/'+T).then(async r=>{const j=await r.json();if(!r.ok)return $('#e').textContent=j.error;data=j;$('#h').textContent=j.title;document.title=j.title;
+ if(j.segments.length>1)data.segments.unshift({name:'All',photos:[].concat(...j.segments.map(s=>s.photos))});
+ data.segments.forEach((s,i)=>{const b=document.createElement('button');b.textContent=`${s.name} (${s.photos.length})`;b.onclick=()=>show(i);$('#t').append(b)});show(0)});
+function show(i){[...$('#t').children].forEach((b,j)=>b.className=i==j?'on':'');$('#d').innerHTML='';
+ (data.segments[i]?.photos||[]).forEach(p=>{const w=document.createElement('div'),im=new Image(),a=document.createElement('a'),u=`/api/img/${p.id}?t=${T}`;im.loading='lazy';im.alt=p.name;im.src=u+'&thumb=1';im.onerror=()=>{im.onerror=null;im.src=u};
+  a.textContent='Download';a.href=u+'&dl=1';im.onclick=()=>{$('#li').src=im.src;$('#lb').style.display='flex';$('#li').src=u};w.append(im,a);$('#d').append(w)})}
+$('#lb').onclick=()=>$('#lb').style.display='none';
+</script></body></html>

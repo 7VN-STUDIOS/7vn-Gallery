@@ -1,0 +1,11 @@
+{
+  "name": "7vn-gallery",
+  "main": "worker.js",
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/g/*"]
+  },
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "7vn-gallery-photos" }]
+}
