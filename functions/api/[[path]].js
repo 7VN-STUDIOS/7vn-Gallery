@@ -1,7 +1,7 @@
 // All API routes. Env: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY. R2 binding: BUCKET.
 const J=(o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'content-type':'application/json'}});
 const enc=encodeURIComponent;
-const sb=(env,path,o={})=>fetch(env.SUPABASE_URL+'/rest/v1/'+path,{...o,headers:{apikey:env.SUPABASE_SERVICE_KEY,Authorization:'Bearer '+env.SUPABASE_SERVICE_KEY,'content-type':'application/json',Prefer:'return=representation'}}).then(async r=>{const t=await r.text();if(!r.ok)throw new Error(t);return t?JSON.parse(t):[]});
+const sb=(env,path,o={})=>fetch(env.SUPABASE_URL+'/rest/v1/'+path,{...o,headers:{apikey:env.SUPABASE_SERVICE_KEY,...(env.SUPABASE_SERVICE_KEY.startsWith('eyJ')?{Authorization:'Bearer '+env.SUPABASE_SERVICE_KEY}:{}),'content-type':'application/json',Prefer:'return=representation'}}).then(async r=>{const t=await r.text();if(!r.ok)throw new Error(t);return t?JSON.parse(t):[]});
 const auth=(env,body,path)=>fetch(env.SUPABASE_URL+'/auth/v1/'+path,{method:'POST',headers:{apikey:env.SUPABASE_ANON_KEY,'content-type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
 const gone=g=>!g||(g.expires_at&&new Date(g.expires_at)<new Date());
 async function user(req,env){const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,Authorization:(req.headers.get('authorization')||'')}});return r.ok?r.json():null}
