@@ -13,7 +13,8 @@ fetch('/api/g/'+T).then(async r=>{const j=await r.json();if(!r.ok){$('#h').textC
 function show(i){[...$('#t').children].forEach((b,j)=>b.className=i==j?'on':'');$('#d').innerHTML='';cur=data.segments[i]?.photos||[];
  cur.forEach((p,k)=>{const w=document.createElement('div'),im=new Image(),a=document.createElement('a');im.loading='lazy';im.alt=p.name;im.src=U(p)+'&thumb=1';im.onerror=()=>{im.onerror=null;im.src=U(p)};im.onclick=()=>open(k);a.textContent='Download';a.href=U(p)+'&dl=1';w.append(im,a);$('#d').append(w)});scrollTo({top:0})}
 function open(k){idx=(k+cur.length)%cur.length;const p=cur[idx],im=$('#li');im.src=U(p)+'&thumb=1';const f=new Image();f.onload=()=>{if(cur[idx]===p)im.src=f.src};f.src=U(p);$('#dl').href=U(p)+'&dl=1';$('#ct').textContent=`${idx+1} / ${cur.length}`;$('#lb').style.display='flex'}
-const close=()=>$('#lb').style.display='none';$('#x').onclick=close;$('#pv').onclick=()=>open(idx-1);$('#nx').onclick=()=>open(idx+1);
+const close=()=>{$('#lb').style.display='none';const e=$('#d').children[idx];if(e)e.scrollIntoView({block:'center'})};$('#x').onclick=close;$('#pv').onclick=()=>open(idx-1);$('#nx').onclick=()=>open(idx+1);
 addEventListener('keydown',e=>{if($('#lb').style.display!='flex')return;if(e.key=='Escape')close();if(e.key=='ArrowLeft')open(idx-1);if(e.key=='ArrowRight')open(idx+1)});
+$('#t').addEventListener('wheel',e=>{const t=$('#t');if(t.scrollWidth>t.clientWidth&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){t.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 let sx=0;$('#lb').addEventListener('touchstart',e=>sx=e.touches[0].clientX);$('#lb').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>60)open(idx+(d<0?1:-1))});
 </script></body></html>
