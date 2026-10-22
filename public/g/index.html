@@ -1,13 +1,13 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Your photos | 7VN Studios</title><link rel="stylesheet" href="/style.css"></head><body>
 <header><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></header>
 <main><div class="hero"><h1 id="h">Loading your photos…</h1><p id="s"></p></div><div class="tabs" id="t"></div><div class="masonry" id="d"></div></main>
-<footer>Delivered by 7VN Studios</footer>
+<footer>Delivered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
 <div id="lb"><div class="bar2"><span id="ct"></span><button class="x" id="x" aria-label="Close">&times;</button></div>
 <button class="n" id="pv" style="left:10px" aria-label="Previous">&#8249;</button><img id="li" alt=""><button class="n" id="nx" style="right:10px" aria-label="Next">&#8250;</button><a class="d" id="dl">Download original</a></div>
 <script>
 const $=s=>document.querySelector(s),T=location.pathname.split('/')[2],U=p=>`/api/img/${p.id}?t=${T}`;let data,cur=[],idx=0;
 fetch('/api/g/'+T).then(async r=>{const j=await r.json();if(!r.ok){$('#h').textContent='Gallery unavailable';return $('#s').textContent=j.error}
- data=j;$('#h').textContent=j.title;document.title=j.title+' | 7VN Studios';const n=j.segments.reduce((a,s)=>a+s.photos.length,0);$('#s').textContent=`${n} photo${n==1?'':'s'}`;
+ data=j;$('#h').textContent=j.title;if(j.cover){const h=$('.hero');h.classList.add('cov');h.style.backgroundImage=`linear-gradient(#0008,#000d),url(/api/img/${j.cover}?t=${T}&thumb=1)`}document.title=j.title+' | 7VN Studios';const n=j.segments.reduce((a,s)=>a+s.photos.length,0);$('#s').textContent=`${n} photo${n==1?'':'s'}`;
  if(j.segments.length>1){j.segments.unshift({name:'All',photos:[].concat(...j.segments.map(s=>s.photos))});j.segments.forEach((s,i)=>{const b=document.createElement('button');b.textContent=`${s.name} (${s.photos.length})`;b.onclick=()=>show(i);$('#t').append(b)})}
  show(0)}).catch(()=>{$('#h').textContent='Something went wrong';$('#s').textContent='Please refresh the page.'});
 function show(i){[...$('#t').children].forEach((b,j)=>b.className=i==j?'on':'');$('#d').innerHTML='';cur=data.segments[i]?.photos||[];
