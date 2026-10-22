@@ -3,6 +3,7 @@ const J=(o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'content-ty
 const enc=encodeURIComponent;
 const sb=(env,path,o={})=>fetch(env.SUPABASE_URL+'/rest/v1/'+path,{...o,headers:{apikey:env.SUPABASE_SERVICE_KEY,...(env.SUPABASE_SERVICE_KEY.startsWith('eyJ')?{Authorization:'Bearer '+env.SUPABASE_SERVICE_KEY}:{}),'content-type':'application/json',Prefer:'return=representation'}}).then(async r=>{const t=await r.text();if(!r.ok)throw new Error(t);return t?JSON.parse(t):[]});
 const auth=(env,body,path)=>fetch(env.SUPABASE_URL+'/auth/v1/'+path,{method:'POST',headers:{apikey:env.SUPABASE_ANON_KEY,'content-type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+const sig=async(env,id)=>{const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.SUPABASE_SERVICE_KEY),{name:'HMAC',hash:'SHA-256'},false,['sign']),b=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode('photo:'+id));return btoa(String.fromCharCode(...new Uint8Array(b))).replace(/[+/=]/g,c=>({'+':'-','/':'_','=':''}[c])).slice(0,24)};
 const gone=g=>!g||(g.expires_at&&new Date(g.expires_at)<new Date());
 const nm=x=>String(x||'').trim().replace(/\s+/g,' ').slice(0,60);
 const uniq=a=>{const o=[];(a||[]).forEach(x=>{x=nm(x);if(x&&!o.some(y=>y.toLowerCase()==x.toLowerCase()))o.push(x)});return o};
@@ -15,8 +16,9 @@ async function handle(req,env){
  if(p[0]=='g'){const[g]=await sb(env,`galleries?token=eq.${enc(p[1])}&select=*`);if(gone(g))return J({error:'This gallery is not available.'},404);
   const ph=await sb(env,`photos?gallery_id=eq.${g.id}&select=id,filename,segment&order=filename`),s={};ph.forEach(x=>(s[x.segment]=s[x.segment]||[]).push({id:x.id,name:x.filename}));
   const order=uniq(g.segments).concat(Object.keys(s).filter(n=>n));return J({title:g.title,cover:g.cover_id,segments:[''].concat(order).filter((n,i,a)=>a.indexOf(n)==i&&s[n]).map(name=>({name:name||'Main',photos:s[name]}))})}
+ if(p[0]=='share'){const[x]=await sb(env,`photos?id=eq.${enc(q.get('id')||'')}&select=galleries(token,expires_at)`),g=x&&x.galleries;if(gone(g)||g.token!==q.get('t'))return J({error:'Not found'},404);return J({url:`${u.origin}/p/${q.get('id')}.${await sig(env,q.get('id'))}`})}
  if(p[0]=='img'){const[x]=await sb(env,`photos?id=eq.${enc(p[1])}&select=key,filename,thumb,galleries(token,expires_at)`),g=x&&x.galleries;
-  if(gone(g)||g.token!==q.get('t'))return new Response('Not found',{status:404});
+  if(gone(g)||!(g.token===q.get('t')||(q.get('s')&&q.get('s')===await sig(env,p[1]))))return new Response('Not found',{status:404});
   const th=q.get('thumb')&&x.thumb,o=await env.BUCKET.get(th?x.key+'.t':x.key);if(!o)return new Response('Not found',{status:404});
   const h=new Headers({'content-type':th?'image/jpeg':(o.httpMetadata?.contentType||'image/jpeg'),'cache-control':'private, max-age=86400'});
   if(q.get('dl'))h.set('content-disposition',`attachment; filename*=UTF-8''${enc(x.filename)}`);return new Response(o.body,{headers:h})}
@@ -53,5 +55,6 @@ async function handle(req,env){
 
 export default{fetch(req,env){const u=new URL(req.url);
  if(u.pathname.startsWith('/api/'))return handle(req,env);
+ if(u.pathname.startsWith('/p/'))return env.ASSETS.fetch(new Request(new URL('/p/',req.url),req));
  if(u.pathname.startsWith('/g/'))return env.ASSETS.fetch(new Request(new URL('/g/',req.url),req));
  return env.ASSETS.fetch(req)}};
