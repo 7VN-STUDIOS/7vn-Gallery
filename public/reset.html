@@ -4,7 +4,7 @@
 <form id="f"><div class="pw"><input id="p" type="password" placeholder="New password (6 or more characters)" required minlength="6" autocomplete="new-password"><button type="button">Show</button></div>
 <div class="pw"><input id="p2" type="password" placeholder="Confirm new password" required minlength="6" autocomplete="new-password"><button type="button">Show</button></div>
 <button>Save new password</button><p class="err" id="m"></p></form><a class="link" href="/">Back to sign in</a></main>
-<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
+<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a> &middot; <a class="s" href="/privacy">Privacy</a> &middot; <a class="s" href="/terms">Terms</a></footer>
 <script>
 const $=s=>document.querySelector(s),H=new URLSearchParams(location.hash.slice(1)),T=H.get('access_token'),R=H.get('refresh_token')||'';
 const msg=t=>{$('#m').textContent=t};
