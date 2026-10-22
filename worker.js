@@ -2,7 +2,7 @@
 const J=(o,s=200)=>new Response(JSON.stringify(o),{status:s,headers:{'content-type':'application/json'}});
 const enc=encodeURIComponent;
 const sb=(env,path,o={})=>fetch(env.SUPABASE_URL+'/rest/v1/'+path,{...o,headers:{apikey:env.SUPABASE_SERVICE_KEY,...(env.SUPABASE_SERVICE_KEY.startsWith('eyJ')?{Authorization:'Bearer '+env.SUPABASE_SERVICE_KEY}:{}),'content-type':'application/json',Prefer:'return=representation'}}).then(async r=>{const t=await r.text();if(!r.ok)throw new Error(t);return t?JSON.parse(t):[]});
-const auth=(env,body,path)=>fetch(env.SUPABASE_URL+'/auth/v1/'+path,{method:'POST',headers:{apikey:env.SUPABASE_ANON_KEY,'content-type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json());
+const auth=(env,body,path)=>fetch(env.SUPABASE_URL+'/auth/v1/'+path,{method:'POST',headers:{apikey:env.SUPABASE_ANON_KEY,'content-type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json().catch(()=>({})));
 const sig=async(env,id)=>{const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.SUPABASE_SERVICE_KEY),{name:'HMAC',hash:'SHA-256'},false,['sign']),b=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode('photo:'+id));return btoa(String.fromCharCode(...new Uint8Array(b))).replace(/[+/=]/g,c=>({'+':'-','/':'_','=':''}[c])).slice(0,24)};
 const gone=g=>!g||(g.expires_at&&new Date(g.expires_at)<new Date());
 const nm=x=>String(x||'').trim().replace(/\s+/g,' ').slice(0,60);
@@ -11,8 +11,15 @@ async function user(req,env){const r=await fetch(env.SUPABASE_URL+'/auth/v1/user
 async function handle(req,env){
  const u=new URL(req.url),p=u.pathname.replace(/^\/api\//,'').split('/'),m=req.method,q=u.searchParams;
  try{
- if(p[0]=='auth'){const b=await req.json();const r=b.mode=='refresh'?await auth(env,{refresh_token:b.refresh},'token?grant_type=refresh_token'):await auth(env,{email:b.email,password:b.password},b.mode=='signup'?'signup':'token?grant_type=password');
-  if(!r.access_token)return J({error:r.msg||r.error_description||r.message||'Could not sign in. Check your details.'},400);return J({token:r.access_token,refresh:r.refresh_token})}
+ if(p[0]=='google')return Response.redirect(`${env.SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${enc(u.origin+'/')}`,302);
+ if(p[0]=='auth'){const b=await req.json(),ro=enc(u.origin+(b.mode=='recover'?'/reset':'/'));let r;
+  if(b.mode=='refresh')r=await auth(env,{refresh_token:b.refresh},'token?grant_type=refresh_token');
+  else if(b.mode=='recover'){await auth(env,{email:b.email},'recover?redirect_to='+ro);return J({ok:true})}
+  else if(b.mode=='resend'){await auth(env,{type:'signup',email:b.email},'resend?redirect_to='+ro);return J({ok:true})}
+  else if(b.mode=='update'){const x=await fetch(env.SUPABASE_URL+'/auth/v1/user',{method:'PUT',headers:{apikey:env.SUPABASE_ANON_KEY,Authorization:'Bearer '+b.token,'content-type':'application/json'},body:JSON.stringify({password:b.password})}),j=await x.json().catch(()=>({}));if(!x.ok)return J({error:j.msg||j.message||'Could not update the password. The link may have expired.'},400);return J({ok:true})}
+  else r=await auth(env,{email:b.email,password:b.password},b.mode=='signup'?'signup?redirect_to='+ro:'token?grant_type=password');
+  if(!r.access_token){if(b.mode=='signup'&&(r.id||r.user))return J({pending:true});if(r.error_code=='email_not_confirmed')return J({error:'Please confirm your email first. Check your inbox.',unconfirmed:true},400);return J({error:r.msg||r.error_description||r.message||'Could not sign in. Check your details.'},400)}
+  return J({token:r.access_token,refresh:r.refresh_token})}
  if(p[0]=='g'){const[g]=await sb(env,`galleries?token=eq.${enc(p[1])}&select=*`);if(gone(g))return J({error:'This gallery is not available.'},404);
   const ph=await sb(env,`photos?gallery_id=eq.${g.id}&select=id,filename,segment&order=filename`),s={};ph.forEach(x=>(s[x.segment]=s[x.segment]||[]).push({id:x.id,name:x.filename}));
   const order=uniq(g.segments).concat(Object.keys(s).filter(n=>n));return J({title:g.title,cover:g.cover_id,segments:[''].concat(order).filter((n,i,a)=>a.indexOf(n)==i&&s[n]).map(name=>({name:name||'Main',photos:s[name]}))})}
