@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" href="/favicon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Set a new password | 7VN Gallery</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><a href="https://7vnstudios.com.ng" target="_blank" rel="noopener" aria-label="7VN Studios website"><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></a></header>
+<main class="narrow"><h2>Set a new password</h2>
+<form id="f"><div class="pw"><input id="p" type="password" placeholder="New password (6 or more characters)" required minlength="6" autocomplete="new-password"><button type="button">Show</button></div>
+<div class="pw"><input id="p2" type="password" placeholder="Confirm new password" required minlength="6" autocomplete="new-password"><button type="button">Show</button></div>
+<button>Save new password</button><p class="err" id="m"></p></form><a class="link" href="/">Back to sign in</a></main>
+<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
+<script>
+const $=s=>document.querySelector(s),H=new URLSearchParams(location.hash.slice(1)),T=H.get('access_token'),R=H.get('refresh_token')||'';
+const msg=t=>{$('#m').textContent=t};
+document.querySelectorAll('.pw button').forEach(b=>b.onclick=()=>{const i=b.previousElementSibling,h=i.type=='password';i.type=h?'text':'password';b.textContent=h?'Hide':'Show'});
+if(!T){$('#f').hidden=true;$('#h2')&&0;document.querySelector('h2').textContent='Link expired';const p=document.createElement('p');p.textContent='This reset link is missing or has expired. Go back and choose Forgot password to get a new one.';$('#f').after(p)}
+$('#f').onsubmit=async ev=>{ev.preventDefault();if($('#p').value!==$('#p2').value)return msg('Passwords do not match.');msg('Saving…');
+ const r=await fetch('/api/auth',{method:'POST',body:JSON.stringify({mode:'update',token:T,password:$('#p').value})}),j=await r.json();
+ if(!r.ok)return msg(j.error);localStorage.t=T;localStorage.r=R;location='/app.html'};
+</script></body></html>
