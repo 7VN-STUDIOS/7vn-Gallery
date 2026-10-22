@@ -8,7 +8,7 @@
 <div class="pw" id="cw" hidden><input id="p2" type="password" placeholder="Confirm password" minlength="6" autocomplete="new-password"><button type="button">Show</button></div>
 <button id="b">Sign in</button><p class="err" id="m"></p></form>
 <button class="link" id="fp">Forgot password?</button><br><button class="link" id="s">New here? Create an account</button><br><button class="link" id="rs" hidden>Resend confirmation email</button></main>
-<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
+<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a> &middot; <a class="s" href="/privacy">Privacy</a> &middot; <a class="s" href="/terms">Terms</a></footer>
 <script>
 const $=s=>document.querySelector(s),H=new URLSearchParams(location.hash.slice(1));let mode='login';
 if(H.get('type')=='recovery'&&H.get('access_token'))location.replace('/reset'+location.hash);
