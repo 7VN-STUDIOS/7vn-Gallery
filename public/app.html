@@ -33,7 +33,7 @@ $('#sg').onchange=async()=>{if($('#sg').value!='__new')return last=$('#sg').valu
  try{const r=await P('galleries/'+cur.id,'PATCH',{segments:[...cur.segments,n]});cur.segments=r.segments;fillSeg(r.segments.find(s=>s.toLowerCase()==n.toLowerCase())||'')}catch(x){alert(x.message);fillSeg(last)}};
 $('#sr').onclick=async()=>{const f=$('#sg').value;if(!f||f=='__new')return alert('Choose a segment to rename first');const n=(prompt('Rename segment',f)||'').trim();if(!n||n==f)return;
  try{const r=await P('galleries/'+cur.id,'PATCH',{rename:{from:f,to:n}});cur.segments=r.segments;fillSeg(n)}catch(x){alert(x.message)}};
-function openUpload(g){if(!G.length){alert('Create a gallery first.');return show('create')}cur=g||cur||G[0];fillGal();fillSeg(cur.segments[0]||'');show('upload')}
+function openUpload(g){if(!G.length){alert('Create a gallery first.');return show('create')}cur=g||cur||G[0];if(!$('#go').disabled){$('#lg').innerHTML='';$('#sum').textContent='';$('#fl').value='';pick()}fillGal();fillSeg(cur.segments[0]||'');show('upload')}
 async function manage(g){cur=g;show('manage');$('#pt').textContent='Photos in '+g.title;$('#mg').textContent='Loading…';const{photos}=await api('galleries/'+g.id+'/photos');draw(g,photos)}
 function draw(g,ph){const el=$('#mg');el.innerHTML=ph.length?'':'<p>No photos yet.</p>';
  ph.forEach(p=>{const d=document.createElement('div'),i=new Image(),s=document.createElement('small'),a=document.createElement('div'),c=document.createElement('button'),x=document.createElement('button'),u=`/api/img/${p.id}?t=${g.token}`;
@@ -42,7 +42,7 @@ function draw(g,ph){const el=$('#mg');el.innerHTML=ph.length?'':'<p>No photos ye
   x.onclick=async()=>{if(!confirm('Delete this photo permanently?'))return;try{await api('photos/'+p.id,{method:'DELETE'});ph.splice(ph.indexOf(p),1);if(g.cover_id==p.id)g.cover_id=null;draw(g,ph);load()}catch(e){alert(e.message)}};
   a.append(c,x);d.append(i,s,a);el.append(d)})}
 async function load(){const m=await api('me');$('#me').textContent=`${m.email}: ${(m.used/GB).toFixed(2)} of ${(m.quota/GB).toFixed(0)} GB used`;$('#us').style.width=Math.min(100,m.used/m.quota*100)+'%';
- const{galleries}=await api('galleries');G=galleries;if(cur)cur=G.find(x=>x.id==cur.id)||(G[0]||null);if(!$('#v-upload').hidden&&cur)fillGal();$('#gl').innerHTML=G.length?'':'<p>No galleries yet. Open the menu and choose Create gallery.</p>';
+ const{galleries}=await api('galleries');G=galleries;if(cur)cur=G.find(x=>x.id==cur.id)||(G[0]||null);if(!$('#v-upload').hidden&&cur)fillGal();$('#gl').innerHTML='';if(!G.length){const p=document.createElement('p'),b=document.createElement('button');p.textContent='You have no galleries yet.';b.textContent='Create gallery';b.onclick=()=>show('create');$('#gl').append(p,b)}
  G.forEach(g=>{const link=`${location.origin}/g/${g.token}`,d=document.createElement('div'),h=document.createElement('h3'),s=document.createElement('small'),a=document.createElement('div');d.className='card';a.className='acts';
   if(g.cover_id){const i=new Image();i.src=`/api/img/${g.cover_id}?t=${g.token}&thumb=1`;i.style.cssText='width:64px;height:64px;object-fit:cover;border-radius:10px;float:right';d.append(i)}
   h.textContent=g.title;s.textContent=`${g.count} photo${g.count==1?'':'s'} · ${g.expires_at?'Expires '+new Date(g.expires_at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}):'Never expires'}`;
@@ -66,6 +66,6 @@ $('#go').onclick=async()=>{const fs=[...$('#fl').files];if(!fs.length)return ale
  for(const f of fs){const r=document.createElement('p'),b=document.createElement('div');r.textContent=f.name;b.className='bar';b.innerHTML='<i></i>';$('#lg').append(r,b);
   try{const j=await put(`upload?g=${cur.id}&seg=${encodeURIComponent($('#sg').value)}&name=${encodeURIComponent(f.name)}`,f,f.type,p=>b.firstChild.style.width=p+'%');
    try{await put('upload?thumb='+j.id,await thumb(f),'image/jpeg')}catch(e){}ok++;r.textContent='Done: '+f.name}catch(x){r.textContent='Failed: '+f.name+' ('+x.message+')'}}
- $('#sum').textContent=`${ok} of ${fs.length} uploaded and verified.`+(ok<fs.length?' Please upload the failed ones again.':'');$('#go').disabled=0;$('#fl').value='';pick();load()};
+ $('#sum').textContent=`${ok} of ${fs.length} uploaded and verified.`+(ok<fs.length?' Please upload the failed ones again.':'');$('#go').disabled=0;$('#fl').value='';pick();await load();if(ok==fs.length){$('#lg').innerHTML='';$('#sum').textContent='';manage(cur)}};
 show('galleries');load().catch(x=>alert(x.message));
 </script></body></html>
