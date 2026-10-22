@@ -80,3 +80,6 @@ header a{display:flex;align-items:center;justify-content:center;height:100%;text
 .ok{color:#9be29b;min-height:1.5em}
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#222;border-radius:10px;padding:12px;font-weight:600;text-decoration:none;margin:12px 0}
 .or{text-align:center;color:var(--mute);margin:12px 0 4px;font-size:.9rem}
+footer a.s{letter-spacing:0;font-weight:400;color:var(--mute)}footer a.s:hover{color:var(--g)}
+.doc{max-width:760px}.doc h1{font-size:2.2rem;margin:.6em 0 0}.doc .meta{color:var(--mute);margin-top:0}
+.doc h2{font-size:1.35rem;margin:1.6em 0 .3em}.doc p,.doc li{color:#e3d8c8}.doc li{margin:.4em 0}.doc a{color:var(--g)}
