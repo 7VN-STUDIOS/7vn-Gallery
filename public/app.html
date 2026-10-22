@@ -16,7 +16,7 @@
 <button id="go">Upload photos</button><p id="sum"></p><div id="lg"></div></section>
 <section class="view" id="v-manage" hidden><button class="link" id="mx">&larr; Back to galleries</button><div class="mg" id="mg"></div></section>
 </main>
-<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
+<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a> &middot; <a class="s" href="/privacy">Privacy</a> &middot; <a class="s" href="/terms">Terms</a></footer>
 <script src="/app.js"></script><script>
 if(!localStorage.t)location='/';let G=[],cur,segs=[],last='';const GB=1073741824,P=(p,m,b)=>api(p,{method:m,body:JSON.stringify(b)}),TT={galleries:'My galleries',create:'Create a gallery',upload:'Add photos',manage:'Manage photos'};
 function show(v){document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!='v-'+v);$('#pt').textContent=TT[v];document.querySelectorAll('#mn a[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v==(v=='manage'?'galleries':v)));$('#mn').classList.remove('open');scrollTo({top:0})}
