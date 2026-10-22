@@ -71,3 +71,9 @@ header a{display:flex;align-items:center;justify-content:center;height:100%;text
 .pw{position:relative;margin:6px 0}.pw input{margin:0;padding-right:76px}
 .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;padding:6px 10px;background:none;color:var(--g);border:0;font-weight:600;font-size:.85rem}
 @media(max-width:640px){.masonry{columns:2;column-gap:6px}.masonry div{margin-bottom:6px;min-height:80px}}
+.masonry a{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:0}
+#lb .ic{background:none;border:0;color:var(--g);width:auto;margin:0 0 0 10px;padding:4px;vertical-align:middle;cursor:pointer}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--p);border:1px solid var(--g);border-radius:999px;padding:10px 18px;display:none;gap:12px;align-items:center;z-index:20;color:var(--t);max-width:92vw}
+#toast button{width:auto;margin:0;padding:6px 14px;border-radius:999px}
+.one{text-align:center}.one img{max-width:100%;max-height:75vh;display:block;margin:20px auto;border-radius:10px}
+.one .d{display:inline-block;background:var(--g);color:#2a0a10;font-weight:600;border-radius:999px;padding:10px 22px;text-decoration:none}
