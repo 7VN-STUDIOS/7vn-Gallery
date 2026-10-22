@@ -45,7 +45,7 @@ footer{text-align:center;color:var(--mute);padding:30px 10px;font-size:.85rem}
 #lb button.n{position:absolute;top:50%;width:48px;height:48px;border-radius:50%;padding:0;font-size:1.6rem;background:#0008;color:var(--t);border:1px solid #5b3a3f;margin:0}
 #lb a.d{margin-top:12px;background:var(--g);color:#2a0a10;font-weight:600;border-radius:999px;padding:10px 22px;text-decoration:none}
 #lb .x{background:none;border:0;color:var(--t);font-size:1.6rem;width:auto;padding:0 8px;margin:0}
-header img{height:63px}header b{font-size:1.95rem}
+header img{height:63px}header b{font-size:1.3rem}
 body{min-height:100vh;display:flex;flex-direction:column}main{width:100%;flex:1}
 footer{margin-top:auto;border-top:1px solid #3a2226;width:100%}footer a{color:var(--g);text-decoration:none;letter-spacing:.2em;font-weight:600}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.chip{background:var(--p);border:1px solid var(--g);border-radius:999px;padding:4px 12px;font-size:.9rem}.chip b{cursor:pointer;margin-left:8px;color:var(--g)}
@@ -56,8 +56,8 @@ footer{margin-top:auto;border-top:1px solid #3a2226;width:100%}footer a{color:va
 .mg small{position:absolute;top:4px;left:4px;background:#000a;padding:0 8px;border-radius:999px;font-size:.7rem}
 .mg .cv{outline:2px solid var(--g)}
 .hero.cov{background-size:cover;background-position:center;border-radius:0 0 18px 18px;padding:90px 12px 40px}
-header{height:95px;padding:0 16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-header img{height:88px;max-width:100%;object-fit:contain}
+header{height:72px;padding:0 16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+header img{height:59px;max-width:100%;object-fit:contain}
 .tabs{justify-content:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--g) transparent;padding:12px 4px}
 .tabs button{flex:0 0 auto}.tabs button:first-child{margin-left:auto}.tabs button:last-child{margin-right:auto}
 nav{position:sticky;top:0;z-index:6;background:var(--m2);border-bottom:1px solid #3a2226;display:flex;align-items:center;padding:0 12px;min-height:48px}
