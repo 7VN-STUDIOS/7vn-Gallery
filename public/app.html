@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Dashboard | 7VN Gallery</title><link rel="stylesheet" href="/style.css"></head><body>
-<header><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></header>
+<header><a href="https://7vnstudios.com.ng" target="_blank" rel="noopener" aria-label="7VN Studios website"><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></a></header>
 <nav><button id="hb" aria-label="Menu">&#9776; Menu</button><div id="mn"><a data-v="galleries">My galleries</a><a data-v="create">Create gallery</a><a data-v="upload">Add photos</a><a id="out">Sign out</a></div></nav>
 <main class="narrow"><h2 id="pt"></h2>
 <section class="view" id="v-galleries"><p id="me" style="margin-bottom:0"></p><div class="bar"><i id="us"></i></div><div id="gl"></div></section>
@@ -22,7 +22,7 @@ if(!localStorage.t)location='/';let G=[],cur,segs=[],last='';const GB=1073741824
 function show(v){document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!='v-'+v);$('#pt').textContent=TT[v];document.querySelectorAll('#mn a[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v==(v=='manage'?'galleries':v)));$('#mn').classList.remove('open');scrollTo({top:0})}
 document.querySelectorAll('#mn a[data-v]').forEach(a=>a.onclick=()=>a.dataset.v=='upload'?openUpload():show(a.dataset.v));
 $('#hb').onclick=()=>$('#mn').classList.toggle('open');$('#mx').onclick=()=>show('galleries');
-$('#out').onclick=()=>{localStorage.clear();location='/'};
+$('#out').onclick=()=>{if(confirm('Are you sure you want to sign out?')){localStorage.clear();location='/'}};
 function chips(){$('#sc').innerHTML='';segs.forEach((s,i)=>{const c=document.createElement('span'),x=document.createElement('b');c.className='chip';c.textContent=s;x.textContent='×';x.onclick=()=>{segs.splice(i,1);chips()};c.append(x);$('#sc').append(c)})}
 function addSeg(){const v=$('#sn').value.trim().replace(/\s+/g,' ');if(v&&!segs.some(s=>s.toLowerCase()==v.toLowerCase()))segs.push(v);$('#sn').value='';chips()}
 $('#sa').onclick=addSeg;$('#sn').onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();addSeg()}};
