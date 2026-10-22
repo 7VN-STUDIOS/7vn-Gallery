@@ -3,6 +3,7 @@
 <h2 id="h">Sign in</h2><p>Upload your photos, get a private link, and send it to your client on WhatsApp.</p>
 <form id="f"><input id="e" type="email" placeholder="Email" required autocomplete="email"><input id="p" type="password" placeholder="Password (6 or more characters)" required minlength="6" autocomplete="current-password"><button id="b">Sign in</button><p class="err" id="m"></p></form>
 <button class="link" id="s">New here? Create an account</button></main>
+<footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
 <script>
 const $=s=>document.querySelector(s);let mode='login';if(localStorage.t)location='/app.html';
 $('#s').onclick=()=>{mode=mode=='login'?'signup':'login';$('#h').textContent=mode=='login'?'Sign in':'Create your account';$('#b').textContent=mode=='login'?'Sign in':'Create account';$('#s').textContent=mode=='login'?'New here? Create an account':'Have an account? Sign in'};
