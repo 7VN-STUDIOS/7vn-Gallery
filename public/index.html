@@ -1,18 +1,31 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>7VN Gallery | Deliver photos to your clients</title><link rel="stylesheet" href="/style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" href="/favicon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="viewport" content="width=device-width,initial-scale=1"><title>7VN Gallery | Deliver photos to your clients</title><link rel="stylesheet" href="/style.css"></head><body>
 <header><a href="https://7vnstudios.com.ng" target="_blank" rel="noopener" aria-label="7VN Studios website"><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></a></header>
 <main class="narrow">
 <h2 id="h">Sign in</h2><p>Upload your photos, get a private link, and send it to your client on WhatsApp.</p>
+<a class="gbtn" id="gg" href="/api/google"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</a><p class="or" id="or">or use your email</p>
 <form id="f"><input id="e" type="email" placeholder="Email" required autocomplete="email">
-<div class="pw"><input id="p" type="password" placeholder="Password (6 or more characters)" required minlength="6" autocomplete="current-password"><button type="button">Show</button></div>
+<div class="pw" id="w1"><input id="p" type="password" placeholder="Password (6 or more characters)" required minlength="6" autocomplete="current-password"><button type="button">Show</button></div>
 <div class="pw" id="cw" hidden><input id="p2" type="password" placeholder="Confirm password" minlength="6" autocomplete="new-password"><button type="button">Show</button></div>
 <button id="b">Sign in</button><p class="err" id="m"></p></form>
-<button class="link" id="s">New here? Create an account</button></main>
+<button class="link" id="fp">Forgot password?</button><br><button class="link" id="s">New here? Create an account</button><br><button class="link" id="rs" hidden>Resend confirmation email</button></main>
 <footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
 <script>
-const $=s=>document.querySelector(s);let mode='login';if(localStorage.t)location='/app.html';
+const $=s=>document.querySelector(s),H=new URLSearchParams(location.hash.slice(1));let mode='login';
+if(H.get('type')=='recovery'&&H.get('access_token'))location.replace('/reset'+location.hash);
+else if(H.get('access_token')){localStorage.t=H.get('access_token');localStorage.r=H.get('refresh_token')||'';history.replaceState(null,'','/');location='/app.html'}
+else if(localStorage.t)location='/app.html';
+const msg=(t,ok)=>{$('#m').textContent=t;$('#m').className=ok?'ok':'err'};
+if(H.get('error_description'))msg('That link is invalid or has expired. Please request a new one.');
 document.querySelectorAll('.pw button').forEach(b=>b.onclick=()=>{const i=b.previousElementSibling,h=i.type=='password';i.type=h?'text':'password';b.textContent=h?'Hide':'Show'});
-$('#s').onclick=()=>{mode=mode=='login'?'signup':'login';const up=mode=='signup';$('#h').textContent=up?'Create your account':'Sign in';$('#b').textContent=up?'Create account':'Sign in';$('#s').textContent=up?'Have an account? Sign in':'New here? Create an account';$('#cw').hidden=!up;$('#p2').required=up;$('#p').autocomplete=up?'new-password':'current-password';$('#m').textContent=''};
-$('#f').onsubmit=async ev=>{ev.preventDefault();if(mode=='signup'&&$('#p').value!==$('#p2').value)return $('#m').textContent='Passwords do not match.';$('#m').textContent='Please wait…';
- const r=await fetch('/api/auth',{method:'POST',body:JSON.stringify({mode,email:$('#e').value.trim(),password:$('#p').value})}),j=await r.json();
- if(!r.ok)return $('#m').textContent=j.error;localStorage.t=j.token;localStorage.r=j.refresh;location='/app.html'};
+function setMode(m){mode=m;const L=m=='login',U=m=='signup',F=m=='forgot';$('#h').textContent=L?'Sign in':U?'Create your account':'Reset your password';$('#b').textContent=L?'Sign in':U?'Create account':'Send reset link';
+ $('#w1').hidden=F;$('#p').required=!F;$('#cw').hidden=!U;$('#p2').required=U;$('#fp').hidden=!L;$('#gg').hidden=F;$('#or').hidden=F;$('#rs').hidden=true;
+ $('#s').textContent=L?'New here? Create an account':U?'Have an account? Sign in':'Back to sign in';$('#p').autocomplete=U?'new-password':'current-password';msg('')}
+$('#s').onclick=()=>setMode(mode=='login'?'signup':'login');$('#fp').onclick=()=>setMode('forgot');
+$('#rs').onclick=async()=>{await fetch('/api/auth',{method:'POST',body:JSON.stringify({mode:'resend',email:$('#e').value.trim()})});msg('Confirmation email sent again. Check your inbox.',1)};
+$('#f').onsubmit=async ev=>{ev.preventDefault();const em=$('#e').value.trim();if(mode=='signup'&&$('#p').value!==$('#p2').value)return msg('Passwords do not match.');msg('Please wait…',1);
+ const body=mode=='forgot'?{mode:'recover',email:em}:{mode,email:em,password:$('#p').value},r=await fetch('/api/auth',{method:'POST',body:JSON.stringify(body)}),j=await r.json();
+ if(!r.ok){$('#rs').hidden=!j.unconfirmed;return msg(j.error)}
+ if(mode=='forgot')return msg('If that email has an account, we have sent a reset link. Check your inbox.',1);
+ if(j.pending){$('#rs').hidden=false;return msg('Almost done! Check your email and tap the confirmation link.',1)}
+ localStorage.t=j.token;localStorage.r=j.refresh;location='/app.html'};
 </script></body></html>
