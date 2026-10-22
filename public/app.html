@@ -1,34 +1,40 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Dashboard | 7VN Gallery</title><link rel="stylesheet" href="/style.css"></head><body>
 <header><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></header>
-<main class="narrow">
-<p id="me" style="margin-bottom:0"></p><div class="bar"><i id="us"></i></div><button class="link" id="out">Sign out</button>
-<h2>New gallery</h2>
+<nav><button id="hb" aria-label="Menu">&#9776; Menu</button><div id="mn"><a data-v="galleries">My galleries</a><a data-v="create">Create gallery</a><a data-v="upload">Add photos</a><a id="out">Sign out</a></div></nav>
+<main class="narrow"><h2 id="pt"></h2>
+<section class="view" id="v-galleries"><p id="me" style="margin-bottom:0"></p><div class="bar"><i id="us"></i></div><div id="gl"></div></section>
+<section class="view" id="v-create" hidden>
 <input id="gt" placeholder="Gallery name (required)" maxlength="80">
 <select id="gd"><option value="60">Link expires in 60 days</option><option value="30">Link expires in 30 days</option><option value="90">Link expires in 90 days</option><option value="0">Never expires</option></select>
 <p style="margin:.8em 0 0">Segments, for example Ceremony or Reception</p>
 <div class="row2"><input id="sn" placeholder="Add a segment"><button id="sa" class="ghost">Add</button></div><div class="chips" id="sc"></div>
-<button id="gc">Create gallery and add photos</button>
-<h2>Your galleries</h2><div id="gl"></div>
-<section id="mp" hidden><h2 id="mt"></h2><button class="link" id="mx">Close</button><div class="mg" id="mg"></div></section>
-<section id="up" hidden><h2 id="ut"></h2>
+<button id="gc">Create gallery and add photos</button></section>
+<section class="view" id="v-upload" hidden>
+<select id="ug"></select>
 <div class="row2"><select id="sg"></select><button id="sr" class="ghost">Rename segment</button></div>
 <label class="drop" id="dz"><input id="fl" type="file" accept="image/*" multiple><span id="dt">Tap to choose photos, or drag them here</span></label>
-<button id="go">Upload photos</button><p id="sum"></p><div id="lg"></div></section></main>
+<button id="go">Upload photos</button><p id="sum"></p><div id="lg"></div></section>
+<section class="view" id="v-manage" hidden><button class="link" id="mx">&larr; Back to galleries</button><div class="mg" id="mg"></div></section>
+</main>
 <footer>Powered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
 <script src="/app.js"></script><script>
-if(!localStorage.t)location='/';let G=[],cur,segs=[],last='';const GB=1073741824,P=(p,m,b)=>api(p,{method:m,body:JSON.stringify(b)});
+if(!localStorage.t)location='/';let G=[],cur,segs=[],last='';const GB=1073741824,P=(p,m,b)=>api(p,{method:m,body:JSON.stringify(b)}),TT={galleries:'My galleries',create:'Create a gallery',upload:'Add photos',manage:'Manage photos'};
+function show(v){document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!='v-'+v);$('#pt').textContent=TT[v];document.querySelectorAll('#mn a[data-v]').forEach(a=>a.classList.toggle('on',a.dataset.v==(v=='manage'?'galleries':v)));$('#mn').classList.remove('open');scrollTo({top:0})}
+document.querySelectorAll('#mn a[data-v]').forEach(a=>a.onclick=()=>a.dataset.v=='upload'?openUpload():show(a.dataset.v));
+$('#hb').onclick=()=>$('#mn').classList.toggle('open');$('#mx').onclick=()=>show('galleries');
 $('#out').onclick=()=>{localStorage.clear();location='/'};
 function chips(){$('#sc').innerHTML='';segs.forEach((s,i)=>{const c=document.createElement('span'),x=document.createElement('b');c.className='chip';c.textContent=s;x.textContent='×';x.onclick=()=>{segs.splice(i,1);chips()};c.append(x);$('#sc').append(c)})}
 function addSeg(){const v=$('#sn').value.trim().replace(/\s+/g,' ');if(v&&!segs.some(s=>s.toLowerCase()==v.toLowerCase()))segs.push(v);$('#sn').value='';chips()}
 $('#sa').onclick=addSeg;$('#sn').onkeydown=e=>{if(e.key=='Enter'){e.preventDefault();addSeg()}};
+function fillGal(){$('#ug').innerHTML='';G.forEach(g=>$('#ug').append(new Option(g.title,g.id)));$('#ug').value=cur.id}
 function fillSeg(v){$('#sg').innerHTML='';[['Main (no segment)','']].concat(cur.segments.map(s=>[s,s]),[['+ Add new segment…','__new']]).forEach(([t,x])=>$('#sg').append(new Option(t,x)));$('#sg').value=v;last=$('#sg').value}
+$('#ug').onchange=()=>{cur=G.find(x=>x.id==$('#ug').value);fillSeg(cur.segments[0]||'')};
 $('#sg').onchange=async()=>{if($('#sg').value!='__new')return last=$('#sg').value;const n=(prompt('New segment name')||'').trim();if(!n)return fillSeg(last);
  try{const r=await P('galleries/'+cur.id,'PATCH',{segments:[...cur.segments,n]});cur.segments=r.segments;fillSeg(r.segments.find(s=>s.toLowerCase()==n.toLowerCase())||'')}catch(x){alert(x.message);fillSeg(last)}};
 $('#sr').onclick=async()=>{const f=$('#sg').value;if(!f||f=='__new')return alert('Choose a segment to rename first');const n=(prompt('Rename segment',f)||'').trim();if(!n||n==f)return;
  try{const r=await P('galleries/'+cur.id,'PATCH',{rename:{from:f,to:n}});cur.segments=r.segments;fillSeg(n)}catch(x){alert(x.message)}};
-function upl(g){cur=g;$('#mp').hidden=1;$('#ut').textContent='Add photos to '+g.title;fillSeg(g.segments[0]||'');$('#up').hidden=0;$('#up').scrollIntoView()}
-async function manage(g){cur=g;$('#up').hidden=1;$('#mp').hidden=0;$('#mt').textContent='Photos in '+g.title;$('#mg').textContent='Loading…';const{photos}=await api('galleries/'+g.id+'/photos');draw(g,photos);$('#mp').scrollIntoView()}
-$('#mx').onclick=()=>$('#mp').hidden=1;
+function openUpload(g){if(!G.length){alert('Create a gallery first.');return show('create')}cur=g||cur||G[0];fillGal();fillSeg(cur.segments[0]||'');show('upload')}
+async function manage(g){cur=g;show('manage');$('#pt').textContent='Photos in '+g.title;$('#mg').textContent='Loading…';const{photos}=await api('galleries/'+g.id+'/photos');draw(g,photos)}
 function draw(g,ph){const el=$('#mg');el.innerHTML=ph.length?'':'<p>No photos yet.</p>';
  ph.forEach(p=>{const d=document.createElement('div'),i=new Image(),s=document.createElement('small'),a=document.createElement('div'),c=document.createElement('button'),x=document.createElement('button'),u=`/api/img/${p.id}?t=${g.token}`;
   i.src=u+'&thumb=1';i.onerror=()=>{i.onerror=null;i.src=u};s.textContent=p.segment||'Main';a.className='a';c.textContent=g.cover_id==p.id?'Cover ✓':'Make cover';x.textContent='Delete';if(g.cover_id==p.id)d.className='cv';
@@ -36,18 +42,18 @@ function draw(g,ph){const el=$('#mg');el.innerHTML=ph.length?'':'<p>No photos ye
   x.onclick=async()=>{if(!confirm('Delete this photo permanently?'))return;try{await api('photos/'+p.id,{method:'DELETE'});ph.splice(ph.indexOf(p),1);if(g.cover_id==p.id)g.cover_id=null;draw(g,ph);load()}catch(e){alert(e.message)}};
   a.append(c,x);d.append(i,s,a);el.append(d)})}
 async function load(){const m=await api('me');$('#me').textContent=`${m.email}: ${(m.used/GB).toFixed(2)} of ${(m.quota/GB).toFixed(0)} GB used`;$('#us').style.width=Math.min(100,m.used/m.quota*100)+'%';
- const{galleries}=await api('galleries');G=galleries;if(cur)cur=G.find(x=>x.id==cur.id)||cur;$('#gl').innerHTML=G.length?'':'<p>No galleries yet. Create your first one above.</p>';
+ const{galleries}=await api('galleries');G=galleries;if(cur)cur=G.find(x=>x.id==cur.id)||(G[0]||null);if(!$('#v-upload').hidden&&cur)fillGal();$('#gl').innerHTML=G.length?'':'<p>No galleries yet. Open the menu and choose Create gallery.</p>';
  G.forEach(g=>{const link=`${location.origin}/g/${g.token}`,d=document.createElement('div'),h=document.createElement('h3'),s=document.createElement('small'),a=document.createElement('div');d.className='card';a.className='acts';
   if(g.cover_id){const i=new Image();i.src=`/api/img/${g.cover_id}?t=${g.token}&thumb=1`;i.style.cssText='width:64px;height:64px;object-fit:cover;border-radius:10px;float:right';d.append(i)}
   h.textContent=g.title;s.textContent=`${g.count} photo${g.count==1?'':'s'} · ${g.expires_at?'Expires '+new Date(g.expires_at).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}):'Never expires'}`;
   const mk=(t,f,c)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;if(c)b.className=c;return b};
-  a.append(mk('Add photos',()=>upl(g)),mk('Manage photos',()=>manage(g),'ghost'),
+  a.append(mk('Add photos',()=>openUpload(g)),mk('Manage photos',()=>manage(g),'ghost'),
    mk('Rename',async()=>{const t=(prompt('Gallery name',g.title)||'').trim();if(!t)return;try{await P('galleries/'+g.id,'PATCH',{title:t});load()}catch(x){alert(x.message)}},'ghost'),
    mk('Copy link',async()=>{await navigator.clipboard.writeText(link);alert('Link copied. Send it to your client.')},'ghost'),mk('Preview',()=>open(link),'ghost'),
-   mk('Delete',async()=>{if(confirm('Delete this gallery and all its photos?')){await api('galleries/'+g.id,{method:'DELETE'});$('#up').hidden=1;$('#mp').hidden=1;cur=null;load()}},'ghost'));
+   mk('Delete',async()=>{if(confirm('Delete this gallery and all its photos?')){await api('galleries/'+g.id,{method:'DELETE'});if(cur&&cur.id==g.id)cur=null;load()}},'ghost'));
   d.append(h,s,a);$('#gl').append(d)})}
 $('#gc').onclick=async()=>{const t=$('#gt').value.trim();if(!t){alert('Please name your gallery first');return $('#gt').focus()}addSeg();
- try{const r=await P('galleries','POST',{title:t,days:+$('#gd').value,segments:segs});$('#gt').value='';segs=[];chips();await load();upl(G.find(x=>x.id==r.id))}catch(x){alert(x.message)}};
+ try{const r=await P('galleries','POST',{title:t,days:+$('#gd').value,segments:segs});$('#gt').value='';segs=[];chips();await load();openUpload(G.find(x=>x.id==r.id))}catch(x){alert(x.message)}};
 const pick=()=>{const n=$('#fl').files.length;$('#dt').textContent=n?`${n} photo${n>1?'s':''} selected`:'Tap to choose photos, or drag them here'};
 $('#fl').onchange=pick;
 ['dragover','dragenter'].forEach(e=>$('#dz').addEventListener(e,ev=>{ev.preventDefault();$('#dz').classList.add('on')}));
@@ -61,5 +67,5 @@ $('#go').onclick=async()=>{const fs=[...$('#fl').files];if(!fs.length)return ale
   try{const j=await put(`upload?g=${cur.id}&seg=${encodeURIComponent($('#sg').value)}&name=${encodeURIComponent(f.name)}`,f,f.type,p=>b.firstChild.style.width=p+'%');
    try{await put('upload?thumb='+j.id,await thumb(f),'image/jpeg')}catch(e){}ok++;r.textContent='Done: '+f.name}catch(x){r.textContent='Failed: '+f.name+' ('+x.message+')'}}
  $('#sum').textContent=`${ok} of ${fs.length} uploaded and verified.`+(ok<fs.length?' Please upload the failed ones again.':'');$('#go').disabled=0;$('#fl').value='';pick();load()};
-load().catch(x=>alert(x.message));
+show('galleries');load().catch(x=>alert(x.message));
 </script></body></html>
