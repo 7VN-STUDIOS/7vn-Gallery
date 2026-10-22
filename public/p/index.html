@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Shared photo | 7VN Studios</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><a href="https://7vnstudios.com.ng" target="_blank" rel="noopener" aria-label="7VN Studios website"><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></a></header>
+<main class="one"><img id="im" alt="Shared photo"><p class="err" id="er"></p><a class="d" id="dl">Download original</a></main>
+<footer>Delivered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a></footer>
+<script src="/share.js"></script><script>
+const[id,sg]=location.pathname.split('/')[2].split('.'),u=`/api/img/${id}?s=${sg}`,im=document.getElementById('im');
+im.src=u;im.onerror=()=>{im.hidden=true;document.getElementById('dl').hidden=true;document.getElementById('er').textContent='This photo is not available.'};
+const d=document.getElementById('dl');d.href=u+'&dl=1';d.onclick=e=>dlClick(e,u,'photo.jpg');
+</script></body></html>
