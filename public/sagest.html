@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" href="/favicon-192.png"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin | 7VN Gallery</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><a href="/" aria-label="7VN Gallery"><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></a></header>
+<main class="wide"><h2>Admin</h2><div id="root"><p>Loading…</p></div></main>
+<script src="/app.js"></script><script>
+const GB=1073741824,fmt=b=>b>=1e8?(b/GB).toFixed(2)+' GB':(b/1048576).toFixed(1)+' MB',dt=s=>s?new Date(s).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}):'Never';
+const h=(t,a={},...c)=>{const e=document.createElement(t);Object.entries(a).forEach(([k,v])=>k.startsWith('on')?e[k]=v:k=='class'?e.className=v:e.setAttribute(k,v));c.flat().forEach(x=>e.append(x));return e};
+const P=(p,m,b)=>api(p,{method:m,body:b?JSON.stringify(b):undefined});let U=[],T={},q,s;
+if(!localStorage.t)$('#root').innerHTML='<p>Please <a href="/">sign in</a> first, then come back to this page.</p>';else load();
+async function load(){try{const j=await api('admin/overview');U=j.users;T=j.totals;list()}catch(e){$('#root').textContent='Not found.'}}
+function list(){const r=$('#root');r.replaceChildren();
+ r.append(h('div',{class:'stats'},...[['Users',T.users],['Galleries',T.galleries],['Photos',T.photos],['Storage',fmt(T.used)+' of 10 GB free']].map(([a,b])=>h('div',{class:'card'},h('small',{},a),h('h3',{},String(b))))),
+  h('div',{class:'bar'},h('i',{style:`width:${Math.min(100,T.used/(10*GB)*100)}%`})),
+  h('div',{class:'row2'},q=h('input',{placeholder:'Search by email',oninput:draw}),s=h('select',{onchange:draw},...[['used','Most storage'],['created','Newest'],['last','Last active']].map(([v,t])=>h('option',{value:v},t)))),
+  h('div',{id:'ul'}),h('button',{class:'ghost',onclick:showLog},'Activity log'));draw()}
+function draw(){const k=q.value.toLowerCase(),o=s.value,a=U.filter(u=>(u.email||'').toLowerCase().includes(k)).sort((x,y)=>o=='used'?y.used-x.used:((y[o]||'')>(x[o]||'')?1:-1));$('#ul').replaceChildren(...a.map(u=>
+ h('div',{class:'card',style:'cursor:pointer',onclick:()=>openUser(u)},h('h3',{},u.email||'(no email)'),h('small',{},`Joined ${dt(u.created)} · Last active ${dt(u.last)} · ${u.galleries} galleries · ${u.photos} photos`),h('div',{class:'bar'},h('i',{style:`width:${Math.min(100,u.used/u.quota*100)}%`})),h('small',{},`${fmt(u.used)} of ${fmt(u.quota)}${u.banned?' · SUSPENDED':''}`))))}
+async function showLog(){const r=$('#root');r.replaceChildren(h('button',{class:'link',onclick:list},'← All users'),h('h2',{},'Activity log'));try{const{log}=await api('admin/log');log.forEach(l=>r.append(h('div',{class:'card'},h('small',{},`${new Date(l.at).toLocaleString()} · ${l.admin}`),h('div',{},`${l.action}: ${l.target}`))));if(!log.length)r.append(h('p',{},'Nothing yet.'))}catch(e){alert(e.message)}}
+async function act(u,body,gone){try{await P('admin/user/'+u.id,'POST',body);await load();if(!gone)openUser(U.find(x=>x.id==u.id)||u)}catch(e){alert(e.message)}}
+async function openUser(u){const r=$('#root');r.replaceChildren(h('p',{},'Loading…'));
+ try{const{galleries}=await api('admin/user/'+u.id),b=(t,f,c)=>h('button',{class:c||'ghost',onclick:f},t),again=async()=>{await load();openUser(U.find(x=>x.id==u.id)||u)};r.replaceChildren();
+  r.append(b('← All users',list,'link'),h('h2',{},u.email||'(no email)'),h('p',{},`${fmt(u.used)} of ${fmt(u.quota)} used · ${u.galleries} galleries · ${u.photos} photos${u.banned?' · SUSPENDED':''}`),
+   h('div',{class:'acts'},
+    b('Set storage limit',async()=>{const g=prompt('New limit in GB',(u.quota/GB).toFixed(0));if(g)await act(u,{action:'quota',gb:+g})}),
+    b(u.banned?'Unsuspend':'Suspend',async()=>{if(confirm((u.banned?'Unsuspend ':'Suspend ')+u.email+'?'))await act(u,{action:u.banned?'unsuspend':'suspend'})}),
+    b('Delete account',async()=>{if(prompt('This permanently deletes the account and all its galleries and photos. Type the email to confirm:')===u.email)await act(u,{action:'delete',email:u.email},1)})));
+  galleries.forEach(g=>{const grid=h('div',{class:'mg'});
+   g.photos.forEach(p=>{const i=new Image(),src=`/api/img/${p.id}?t=${g.token}`;i.src=src+'&thumb=1';i.onerror=()=>{i.onerror=null;i.src=src};i.loading='lazy';
+    grid.append(h('div',{},i,h('small',{},`${p.filename} · ${fmt(p.size)}`),h('div',{class:'a'},b('Delete',async()=>{if(confirm('Delete this photo?')){try{await P('admin/photo/'+p.id,'DELETE');again()}catch(e){alert(e.message)}}}))))});
+   r.append(h('div',{class:'card'},h('h3',{},g.title),h('small',{},`${g.photos.length} photos · ${g.expires_at?'Expires '+dt(g.expires_at):'Never expires'}`),h('div',{class:'acts'},b('Delete gallery',async()=>{if(confirm('Delete this gallery and all its photos?')){try{await P('admin/gallery/'+g.id,'DELETE');again()}catch(e){alert(e.message)}}})),grid))});
+  if(!galleries.length)r.append(h('p',{},'This user has no galleries yet.'))}catch(e){alert(e.message);list()}}
+</script></body></html>
