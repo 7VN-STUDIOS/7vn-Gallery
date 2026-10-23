@@ -83,3 +83,5 @@ header a{display:flex;align-items:center;justify-content:center;height:100%;text
 footer a.s{letter-spacing:0;font-weight:400;color:var(--mute)}footer a.s:hover{color:var(--g)}
 .doc{max-width:760px}.doc h1{font-size:2.2rem;margin:.6em 0 0}.doc .meta{color:var(--mute);margin-top:0}
 .doc h2{font-size:1.35rem;margin:1.6em 0 .3em}.doc p,.doc li{color:#e3d8c8}.doc li{margin:.4em 0}.doc a{color:var(--g)}
+.wide{max-width:1000px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.stats .card{margin:0}.stats h3{margin:.2em 0 0}
+.mg small{max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
