@@ -32,6 +32,32 @@ async function handle(req,env){
  const me=await user(req,env);if(!me||!me.id)return J({error:'Please sign in again.'},401);
  let[pr]=await sb(env,`profiles?id=eq.${me.id}`);if(!pr)[pr]=await sb(env,'profiles',{method:'POST',body:JSON.stringify({id:me.id,email:me.email})});
  const setUsed=n=>sb(env,`profiles?id=eq.${me.id}`,{method:'PATCH',body:JSON.stringify({used_bytes:Math.max(0,n)})});
+ if(p[0]=='admin'){
+  const adm=(env.ADMIN_EMAILS||'').toLowerCase().split(',').map(x=>x.trim()).filter(Boolean);
+  if(!me.email_confirmed_at||!adm.includes((me.email||'').toLowerCase()))return J({error:'Not found'},404);
+  const au=(path,o={})=>fetch(env.SUPABASE_URL+'/auth/v1/admin/'+path,{...o,headers:{apikey:env.SUPABASE_SERVICE_KEY,...(env.SUPABASE_SERVICE_KEY.startsWith('eyJ')?{Authorization:'Bearer '+env.SUPABASE_SERVICE_KEY}:{}),'content-type':'application/json'}}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.msg||j.message||'Auth admin error');return j});
+  const log=(action,target)=>sb(env,'admin_log',{method:'POST',body:JSON.stringify({admin:me.email,action,target})}).catch(()=>{});
+  const wipe=async rows=>{for(let i=0;i<rows.length;i+=500)await env.BUCKET.delete(rows.slice(i,i+500).flatMap(x=>[x.key,x.key+'.t']))};
+  const free=async(o,n)=>{const[r]=await sb(env,`profiles?id=eq.${o}`);if(r)await sb(env,`profiles?id=eq.${o}`,{method:'PATCH',body:JSON.stringify({used_bytes:Math.max(0,r.used_bytes-n)})})};
+  const sub=p[1],id=enc(p[2]||'');
+  if(sub=='overview'){const[a,pf,gs]=await Promise.all([au('users?per_page=1000'),sb(env,'profiles?select=id,used_bytes,quota_bytes'),sb(env,'galleries?select=owner,photos(count)')]);
+   const P={},G={},C={};pf.forEach(x=>P[x.id]=x);gs.forEach(g=>{G[g.owner]=(G[g.owner]||0)+1;C[g.owner]=(C[g.owner]||0)+g.photos[0].count});
+   const users=(a.users||[]).map(x=>({id:x.id,email:x.email,created:x.created_at,last:x.last_sign_in_at,banned:!!(x.banned_until&&new Date(x.banned_until)>new Date()),used:P[x.id]?.used_bytes||0,quota:P[x.id]?.quota_bytes||5368709120,galleries:G[x.id]||0,photos:C[x.id]||0}));
+   return J({users,totals:{users:users.length,used:users.reduce((t,x)=>t+x.used,0),galleries:gs.length,photos:Object.values(C).reduce((t,x)=>t+x,0)}})}
+  if(sub=='log')return J({log:await sb(env,'admin_log?select=*&order=at.desc&limit=50')});
+  if(sub=='user'&&m=='GET')return J({galleries:await sb(env,`galleries?owner=eq.${id}&select=id,title,token,expires_at,photos(id,filename,segment,size)&order=created_at.desc`)});
+  if(sub=='photo'&&m=='DELETE'){const[x]=await sb(env,`photos?id=eq.${id}&select=key,size,owner,gallery_id,filename`);if(!x)return J({error:'Not found'},404);
+   await wipe([x]);await sb(env,`photos?id=eq.${id}`,{method:'DELETE'});await sb(env,`galleries?id=eq.${x.gallery_id}&cover_id=eq.${id}`,{method:'PATCH',body:JSON.stringify({cover_id:null})});await free(x.owner,x.size);await log('delete photo',`${x.filename} (${x.owner})`);return J({})}
+  if(sub=='gallery'&&m=='DELETE'){const[g]=await sb(env,`galleries?id=eq.${id}&select=id,owner,title`);if(!g)return J({error:'Not found'},404);
+   const ph=await sb(env,`photos?gallery_id=eq.${g.id}&select=key,size&limit=1000`);await wipe(ph);await sb(env,`galleries?id=eq.${g.id}`,{method:'DELETE'});await free(g.owner,ph.reduce((t,x)=>t+x.size,0));await log('delete gallery',`${g.title} (${g.owner})`);return J({})}
+  if(sub=='user'&&m=='POST'){const b=await req.json();
+   if(b.action=='quota'){const n=Math.round(+b.gb*1073741824);if(!(n>0))return J({error:'Enter a valid size'},400);const[r]=await sb(env,`profiles?id=eq.${id}`);
+    if(r)await sb(env,`profiles?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({quota_bytes:n})});else await sb(env,'profiles',{method:'POST',body:JSON.stringify({id:p[2],quota_bytes:n})});await log('set limit',`${p[2]} = ${b.gb} GB`);return J({})}
+   if(b.action=='suspend'||b.action=='unsuspend'){await au('users/'+id,{method:'PUT',body:JSON.stringify({ban_duration:b.action=='suspend'?'876000h':'none'})});await log(b.action,p[2]);return J({})}
+   if(b.action=='delete'){if(p[2]==me.id)return J({error:'You cannot delete your own account here'},400);
+    for(;;){const ph=await sb(env,`photos?owner=eq.${id}&select=id,key&limit=1000`);if(!ph.length)break;await wipe(ph);await sb(env,`photos?id=in.(${ph.map(x=>x.id).join(',')})`,{method:'DELETE'})}
+    await sb(env,`galleries?owner=eq.${id}`,{method:'DELETE'});await sb(env,`profiles?id=eq.${id}`,{method:'DELETE'});await au('users/'+id,{method:'DELETE'});await log('delete account',`${p[2]} ${b.email||''}`);return J({})}}
+  return J({error:'Not found'},404)}
  if(p[0]=='me')return J({email:me.email,used:pr.used_bytes,quota:pr.quota_bytes});
  if(p[0]=='galleries'){
   if(m=='GET'&&p[1]){const ph=await sb(env,`photos?gallery_id=eq.${enc(p[1])}&owner=eq.${me.id}&select=id,filename,segment&order=filename`);return J({photos:ph})}
