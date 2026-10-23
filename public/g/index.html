@@ -8,7 +8,7 @@
 const DL='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>';
 const $=s=>document.querySelector(s),T=location.pathname.split('/')[2],U=p=>`/api/img/${p.id}?t=${T}`;let data,cur=[],idx=0;
 fetch('/api/g/'+T).then(async r=>{const j=await r.json();if(!r.ok){$('#h').textContent='Gallery unavailable';return $('#s').textContent=j.error}
- data=j;$('#h').textContent=j.title;if(j.cover){const h=$('.hero');h.classList.add('cov');h.style.backgroundImage=`linear-gradient(#0008,#000d),url(/api/img/${j.cover}?t=${T}&thumb=1)`}document.title=j.title+' | 7VN Studios';const n=j.segments.reduce((a,s)=>a+s.photos.length,0);$('#s').textContent=`${n} photo${n==1?'':'s'}`;
+ data=j;$('#h').textContent=j.title;if(j.cover){const h=$('.hero');h.classList.add('cov');h.style.backgroundImage=`linear-gradient(#0008,#000d),url(/api/img/${j.cover}?t=${T}&thumb=1)`}document.title=j.title+' | 7VN STUDIOS';const n=j.segments.reduce((a,s)=>a+s.photos.length,0);$('#s').textContent=`${n} photo${n==1?'':'s'}`;
  if(j.segments.length>1){j.segments.unshift({name:'All',photos:[].concat(...j.segments.map(s=>s.photos))});j.segments.forEach((s,i)=>{const b=document.createElement('button');b.textContent=`${s.name} (${s.photos.length})`;b.onclick=()=>show(i);$('#t').append(b)})}
  show(0)}).catch(()=>{$('#h').textContent='Something went wrong';$('#s').textContent='Please refresh the page.'});
 function show(i){[...$('#t').children].forEach((b,j)=>b.className=i==j?'on':'');$('#d').innerHTML='';cur=data.segments[i]?.photos||[];
