@@ -60,8 +60,19 @@ async function handle(req,env){
   await sb(env,'photos',{method:'POST',body:JSON.stringify({id,gallery_id:g.id,owner:me.id,segment:seg,filename:(q.get('name')||'photo.jpg').slice(0,200),key,size})});await setUsed(pr.used_bytes+size);return J({id})}
  return J({error:'Not found'},404)}catch(e){return J({error:'Server error. Please try again.'},500)}}
 
-export default{fetch(req,env){const u=new URL(req.url);
+const HOST='gallery.7vnstudios.com.ng';
+const esc=x=>String(x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+async function page(req,env,u,path,m){const r=await env.ASSETS.fetch(new Request(new URL(path,req.url),req));if(!m)return r;
+ const t=`<meta property="og:type" content="website"><meta property="og:site_name" content="7VN STUDIOS"><meta property="og:title" content="${esc(m.title)}"><meta property="og:description" content="${esc(m.desc)}"><meta property="og:url" content="${esc(u.href)}"><meta property="og:image" content="${esc(m.image)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${esc(m.title)}"><meta name="twitter:image" content="${esc(m.image)}">`;
+ return new HTMLRewriter().on('title',{element(e){e.setInnerContent(m.title)}}).on('head',{element(e){e.append(t,{html:true})}}).transform(r)}
+async function gmeta(env,u,token){try{const[g]=await sb(env,`galleries?token=eq.${enc(token)}&select=id,title,cover_id,expires_at`);if(gone(g))return null;let c=g.cover_id;
+ if(!c){const[x]=await sb(env,`photos?gallery_id=eq.${g.id}&select=id&order=filename&limit=1`);c=x&&x.id}
+ return{title:`${g.title} | 7VN STUDIOS`,desc:'View and download your photos from 7VN Studios.',image:c?`${u.origin}/api/img/${c}?t=${enc(token)}&thumb=1`:`${u.origin}/apple-touch-icon.png`}}catch(e){return null}}
+async function pmeta(env,u,seg){try{const[id,sg]=seg.split('.');if(!id||sg!==await sig(env,id))return null;const[x]=await sb(env,`photos?id=eq.${enc(id)}&select=galleries(expires_at)`);if(!x||gone(x.galleries))return null;
+ return{title:'Shared photo | 7VN STUDIOS',desc:'View and download this photo from 7VN Studios.',image:`${u.origin}/api/img/${id}?s=${sg}&thumb=1`}}catch(e){return null}}
+export default{async fetch(req,env){const u=new URL(req.url);
+ if(u.hostname.endsWith('.workers.dev')){u.hostname=HOST;u.port='';u.protocol='https:';return Response.redirect(u.toString(),307)}
  if(u.pathname.startsWith('/api/'))return handle(req,env);
- if(u.pathname.startsWith('/p/'))return env.ASSETS.fetch(new Request(new URL('/p/',req.url),req));
- if(u.pathname.startsWith('/g/'))return env.ASSETS.fetch(new Request(new URL('/g/',req.url),req));
+ if(u.pathname.startsWith('/p/'))return page(req,env,u,'/p/',await pmeta(env,u,u.pathname.split('/')[2]||''));
+ if(u.pathname.startsWith('/g/'))return page(req,env,u,'/g/',await gmeta(env,u,u.pathname.split('/')[2]||''));
  return env.ASSETS.fetch(req)}};
