@@ -21,7 +21,7 @@ async function handle(req,env){
   if(!r.access_token){if(b.mode=='signup'&&(r.id||r.user))return J({pending:true});if(r.error_code=='email_not_confirmed')return J({error:'Please confirm your email first. Check your inbox.',unconfirmed:true},400);return J({error:r.msg||r.error_description||r.message||'Could not sign in. Check your details.'},400)}
   return J({token:r.access_token,refresh:r.refresh_token})}
  if(p[0]=='g'){const[g]=await sb(env,`galleries?token=eq.${enc(p[1])}&select=*`);if(gone(g))return J({error:'This gallery is not available.'},404);
-  const ph=await sb(env,`photos?gallery_id=eq.${g.id}&select=id,filename,segment&order=filename`),s={};ph.forEach(x=>(s[x.segment]=s[x.segment]||[]).push({id:x.id,name:x.filename}));
+  const ph=await sb(env,`photos?gallery_id=eq.${g.id}&select=id,filename,segment,size&order=filename`),s={};ph.forEach(x=>(s[x.segment]=s[x.segment]||[]).push({id:x.id,name:x.filename,size:x.size}));
   const order=uniq(g.segments).concat(Object.keys(s).filter(n=>n));return J({title:g.title,cover:g.cover_id,segments:[''].concat(order).filter((n,i,a)=>a.indexOf(n)==i&&s[n]).map(name=>({name:name||'Main',photos:s[name]}))})}
  if(p[0]=='share'){const[x]=await sb(env,`photos?id=eq.${enc(q.get('id')||'')}&select=galleries(token,expires_at)`),g=x&&x.galleries;if(gone(g)||g.token!==q.get('t'))return J({error:'Not found'},404);return J({url:`${u.origin}/p/${q.get('id')}.${await sig(env,q.get('id'))}`})}
  if(p[0]=='img'){const[x]=await sb(env,`photos?id=eq.${enc(p[1])}&select=key,filename,thumb,galleries(token,expires_at)`),g=x&&x.galleries;
