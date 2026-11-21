@@ -1,7 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="/favicon.ico?v=2" sizes="48x48"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2"><link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=2"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#5a0f1c"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Your photos | 7VN Studios</title><link rel="stylesheet" href="/style.css"></head><body>
 <header><a href="https://7vnstudios.com.ng" target="_blank" rel="noopener" aria-label="7VN Studios website"><img src="/logo.png" alt="7VN Studios" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'7VN STUDIOS'}))"></a></header>
-<main><div class="hero"><h1 id="h">Loading your photos…</h1><p id="s"></p></div><div class="tabs" id="t"></div><div class="masonry" id="d"></div></main>
+<main><div class="hero"><h1 id="h">Loading your photos…</h1><p id="s"></p></div><div class="tabs" id="t"></div><div class="tools" id="tb"></div><div class="masonry" id="d"></div></main>
 <footer>Delivered by <a href="https://7vnstudios.com.ng">7VN STUDIOS</a> &middot; <a class="s" href="/privacy">Privacy</a> &middot; <a class="s" href="/terms">Terms</a></footer>
+<div id="sb"><span id="sc"></span><button id="sa" class="ghost">Select all</button><button id="sd">Download</button><button id="sx" class="ghost">Cancel</button></div><div id="pg"></div><div id="pm"></div>
 <div id="lb"><div class="bar2"><span><span id="ct"></span><button class="ic" id="sh" aria-label="Share this photo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L8 7m4-4l4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg></button></span><button class="x" id="x" aria-label="Close">&times;</button></div>
 <button class="n" id="pv" style="left:10px" aria-label="Previous">&#8249;</button><img id="li" alt=""><button class="n" id="nx" style="right:10px" aria-label="Next">&#8250;</button><a class="d" id="dl">Download original</a></div>
 <script src="/share.js"></script><script>
@@ -9,10 +10,11 @@ const DL='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="cu
 const $=s=>document.querySelector(s),T=location.pathname.split('/')[2],U=p=>`/api/img/${p.id}?t=${T}`;let data,cur=[],idx=0;
 fetch('/api/g/'+T).then(async r=>{const j=await r.json();if(!r.ok){$('#h').textContent='Gallery unavailable';return $('#s').textContent=j.error}
  data=j;$('#h').textContent=j.title;if(j.cover){const h=$('.hero');h.classList.add('cov');h.style.backgroundImage=`linear-gradient(#0008,#000d),url(/api/img/${j.cover}?t=${T}&thumb=1)`}document.title=j.title+' | 7VN STUDIOS';const n=j.segments.reduce((a,s)=>a+s.photos.length,0);$('#s').textContent=`${n} photo${n==1?'':'s'}`;
+ ALL=[].concat(...j.segments.map(s=>s.photos.map(p=>({...p,seg:s.name}))));SEGN=j.segments.length;TITLE=j.title;
  if(j.segments.length>1){j.segments.unshift({name:'All',photos:[].concat(...j.segments.map(s=>s.photos))});j.segments.forEach((s,i)=>{const b=document.createElement('button');b.textContent=`${s.name} (${s.photos.length})`;b.onclick=()=>show(i);$('#t').append(b)})}
  show(0)}).catch(()=>{$('#h').textContent='Something went wrong';$('#s').textContent='Please refresh the page.'});
-function show(i){[...$('#t').children].forEach((b,j)=>b.className=i==j?'on':'');$('#d').innerHTML='';cur=data.segments[i]?.photos||[];
- cur.forEach((p,k)=>{const w=document.createElement('div'),im=new Image(),a=document.createElement('a');im.loading='lazy';im.alt=p.name;im.src=U(p)+'&thumb=1';im.onerror=()=>{im.onerror=null;im.src=U(p)};im.onclick=()=>open(k);a.innerHTML=DL;a.setAttribute('aria-label','Download');a.href=U(p)+'&dl=1';a.onclick=e=>dlClick(e,U(p),p.name);w.append(im,a);$('#d').append(w)});scrollTo({top:0})}
+function show(i){curTab=i;tools();[...$('#t').children].forEach((b,j)=>b.className=i==j?'on':'');$('#d').innerHTML='';cur=data.segments[i]?.photos||[];
+ cur.forEach((p,k)=>{const w=document.createElement('div'),im=new Image(),a=document.createElement('a'),ck=document.createElement('span');ck.className='ck';ck.textContent='✓';im.loading='lazy';im.alt=p.name;im.src=U(p)+'&thumb=1';im.onerror=()=>{im.onerror=null;im.src=U(p)};im.onclick=()=>selecting?tog(p,w):open(k);a.innerHTML=DL;a.setAttribute('aria-label','Download');a.href=U(p)+'&dl=1';a.onclick=e=>dlClick(e,U(p),p.name);w.append(im,a,ck);if(sel.has(p.id))w.classList.add('sel');$('#d').append(w)});scrollTo({top:0})}
 function open(k){idx=(k+cur.length)%cur.length;const p=cur[idx],im=$('#li');im.src=U(p)+'&thumb=1';const f=new Image();f.onload=()=>{if(cur[idx]===p)im.src=f.src};f.src=U(p);$('#dl').href=U(p)+'&dl=1';$('#dl').onclick=e=>dlClick(e,U(p),p.name);$('#ct').textContent=`${idx+1} / ${cur.length}`;if($('#lb').style.display!='flex')history.pushState({lb:1},'');$('#lb').style.display='flex'}
 $('#sh').onclick=async()=>{const p=cur[idx];try{const r=await fetch(`/api/share?t=${T}&id=${p.id}`),j=await r.json();if(!r.ok)throw 0;if(navigator.share)await navigator.share({title:data.title,url:j.url});else{await navigator.clipboard.writeText(j.url);toast('Link copied')}}catch(e){if(e&&e.name=='AbortError')return;toast('Could not create the link')}};
 const hide=()=>{$('#lb').style.display='none';const e=$('#d').children[idx];if(e)e.scrollIntoView({block:'center'})};
@@ -21,4 +23,36 @@ addEventListener('popstate',()=>{if($('#lb').style.display=='flex')hide()});$('#
 addEventListener('keydown',e=>{if($('#lb').style.display!='flex')return;if(e.key=='Escape')close();if(e.key=='ArrowLeft')open(idx-1);if(e.key=='ArrowRight')open(idx+1)});
 $('#t').addEventListener('wheel',e=>{const t=$('#t');if(t.scrollWidth>t.clientWidth&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){t.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 let sx=0;$('#lb').addEventListener('touchstart',e=>sx=e.touches[0].clientX);$('#lb').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>60)open(idx+(d<0?1:-1))});
+
+let ALL=[],SEGN=1,TITLE='photos',curTab=0,selecting=false;const sel=new Set();
+const nm=s=>String(s).replace(/[\\/:*?"<>|]/g,'_'),fmt=b=>b>=1e9?(b/1e9).toFixed(1)+' GB':Math.max(1,Math.round(b/1e6))+' MB';
+const pg=m=>{const e=$('#pg');e.textContent=m;e.style.display=m?'block':'none'};
+const mkb=(t,f,c)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;if(c)b.className=c;return b};
+function tools(){const tot=ALL.reduce((a,p)=>a+(p.size||0),0),t=data.segments[curTab],b=[mkb(selecting?'Cancel selection':'Select photos',()=>setSel(!selecting),'ghost'),mkb(`Download all (${ALL.length} · ${fmt(tot)})`,()=>dlList(ALL,nm(TITLE),true))];
+ if(SEGN>1&&curTab>0)b.push(mkb(`Download ${t.name}`,()=>dlList(ALL.filter(p=>p.seg==t.name),`${nm(TITLE)} - ${nm(t.name)}`,false),'ghost'));$('#tb').replaceChildren(...b)}
+const upd=()=>$('#sc').textContent=`${sel.size} selected`;
+function setSel(v){selecting=v;sel.clear();document.body.classList.toggle('selecting',v);$('#sb').style.display=v?'flex':'none';document.querySelectorAll('#d .sel').forEach(e=>e.classList.remove('sel'));upd();tools()}
+function tog(p,w){sel.has(p.id)?sel.delete(p.id):sel.add(p.id);w.classList.toggle('sel',sel.has(p.id));upd()}
+$('#sa').onclick=()=>{cur.forEach(p=>sel.add(p.id));document.querySelectorAll('#d>div').forEach(e=>e.classList.add('sel'));upd()};$('#sx').onclick=()=>setSel(false);
+$('#sd').onclick=async()=>{const l=ALL.filter(p=>sel.has(p.id));if(!l.length)return toast('Tap photos to select them first');
+ if(l.length==1){const p=l[0];if(IOS&&navigator.canShare)saveToPhotos(U(p),p.name);else location.href=U(p)+'&dl=1'}
+ else if(IOS&&navigator.canShare&&l.length<=30)await saveManyToPhotos(l.map(p=>({url:U(p),name:p.name})));
+ else await dlList(l,nm(TITLE)+' - selected',false);setSel(false)};
+const plan=l=>{const o=[];let c=[],z=0;for(const p of l){if(c.length&&(z+(p.size||0)>350e6||c.length>=150)){o.push(c);c=[];z=0}c.push(p);z+=p.size||0}if(c.length)o.push(c);return o};
+async function dlList(l,name,fold){const parts=plan(l);if(parts.length<2)return runPart(parts[0],name+'.zip',fold);
+ const m=$('#pm'),p=document.createElement('p');p.textContent=`This is a large download, so it is split into ${parts.length} zip files. Tap each one to download it.`;
+ m.replaceChildren(p,...parts.map((c,i)=>mkb(`Part ${i+1} of ${parts.length} · ${c.length} photos · ${fmt(c.reduce((a,x)=>a+(x.size||0),0))}`,()=>runPart(c,`${name} (part ${i+1} of ${parts.length}).zip`,fold))),mkb('Close',()=>m.style.display='none','ghost'));m.style.display='flex'}
+async function runPart(l,fname,fold){try{pg(`Preparing 0 of ${l.length}…`);const used=new Set(),items=l.map(p=>{const n=(fold&&SEGN>1?nm(p.seg)+'/':'')+nm(p.name);let k=n,c=1;while(used.has(k.toLowerCase()))k=n.replace(/(\.[^.\/]*)?$/,` (${++c})$1`);used.add(k.toLowerCase());return{name:k,url:U(p)}});
+ const blob=await zip(items,n=>pg(`Preparing ${n} of ${items.length}…`)),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);pg('');toast('Your download has started')}catch(e){pg('');toast('Download failed. Please try again.')}}
+const CT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc=u=>{let c=-1;for(let i=0;i<u.length;i++)c=CT[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
+async function zip(items,prog){const res=new Array(items.length);let i=0,done=0;
+ await Promise.all(Array.from({length:4},async()=>{while(i<items.length){const k=i++,r=await fetch(items[k].url);if(!r.ok)throw 0;res[k]=new Uint8Array(await r.arrayBuffer());prog(++done)}}));
+ const enc=new TextEncoder(),ch=[],cd=[],d=new Date(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),dy=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();let off=0;
+ for(let k=0;k<items.length;k++){const buf=res[k],c=crc(buf),n=enc.encode(items[k].name),L=new DataView(new ArrayBuffer(30)),C=new DataView(new ArrayBuffer(46));
+  L.setUint32(0,0x04034b50,true);L.setUint16(4,20,true);L.setUint16(6,0x0800,true);L.setUint16(10,tm,true);L.setUint16(12,dy,true);L.setUint32(14,c,true);L.setUint32(18,buf.length,true);L.setUint32(22,buf.length,true);L.setUint16(26,n.length,true);
+  C.setUint32(0,0x02014b50,true);C.setUint16(4,20,true);C.setUint16(6,20,true);C.setUint16(8,0x0800,true);C.setUint16(12,tm,true);C.setUint16(14,dy,true);C.setUint32(16,c,true);C.setUint32(20,buf.length,true);C.setUint32(24,buf.length,true);C.setUint16(28,n.length,true);C.setUint32(42,off,true);
+  ch.push(L.buffer,n,buf);cd.push(C.buffer,n);off+=30+n.length+buf.length;res[k]=null;await new Promise(r=>setTimeout(r))}
+ const sz=cd.reduce((a,x)=>a+x.byteLength,0),E=new DataView(new ArrayBuffer(22));E.setUint32(0,0x06054b50,true);E.setUint16(8,items.length,true);E.setUint16(10,items.length,true);E.setUint32(12,sz,true);E.setUint32(16,off,true);
+ return new Blob([...ch,...cd,E.buffer],{type:'application/zip'})}
 </script></body></html>
